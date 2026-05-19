@@ -1,0 +1,57 @@
+#version: "3.8"
+
+services:
+  localstack:
+    image: localstack/localstack-pro
+    privileged: true
+    ports:
+      - "127.0.0.1:4566:4566"            # LocalStack Gateway
+      - "127.0.0.1:4510-4559:4510-4559"  # external services port range
+    environment:
+      - SERVICES=s3,ec2,rds,ecr,iam,kms,route53,cloudwatch,logs
+      - DEBUG=1
+      - DATA_DIR=/tmp/localstack/data
+      - LAMBDA_EXECUTOR=docker
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - LOCALSTACK_AUTH_TOKEN=${LOCALSTACK_AUTH_TOKEN}
+      - DEBUG=${DEBUG:-0}
+    volumes:
+      - localstack-volume2:/var/lib/localstack
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      jenkins_localstack:
+        aliases:
+          - localhost.localstack.cloud 
+          - 000000000000.dkr.ecr.us-east-1.localhost.localstack.cloud
+      default:
+#      - localstack_tmp:/tmp/localstack
+      minikube:
+        aliases:
+          - 000000000000.dkr.ecr.us-east-1.localhost.localstack.cloud
+          - localhost.localstack.cloud
+  postgres:
+    image: postgres:15
+    container_name: postgres-db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: localstack_db
+    ports:
+      - "5432:5432"
+    networks:
+      - default
+    volumes:
+      - postgres_data2:/var/lib/postgresql/data
+volumes:
+  localstack-volume2:
+  postgres_data2:
+networks:
+  minikube:
+    name: minikube
+    external: true
+  default:
+    driver: bridge
+  jenkins_localstack:
+    external: true
+    name: jenkins_localstack
+ # localstack_tmp:

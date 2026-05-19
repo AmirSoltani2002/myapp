@@ -1,0 +1,32 @@
+services:
+  jenkins:
+    image: myjenkins:latest
+    container_name: jenkins
+    user: root
+    ports:
+      - 8080:8080
+      - 50000:50000
+    volumes:
+      - jen-volume:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+     # - ~/.kube:/var/jenkins_home/.kube:ro
+ #     - /snap/bin/docker:/usr/bin/docker
+    networks:
+      - default
+      - jenkins_localstack
+      - minikube
+volumes:
+  jen-volume:
+    name: jen-volume
+    external: true
+
+networks:
+  # Tell Compose to hook into the network Minikube already created
+  default:
+    driver: bridge
+  minikube:
+    external: true
+    name: minikube
+  jenkins_localstack:
+    external: true
+    name: jenkins_localstack
